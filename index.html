@@ -4,15 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Portal de Serviços e Planta Interativa — Fatec Itu</title>
-  <!-- Biblioteca externa para geração de QR Codes reais e legíveis -->
+  <!-- Biblioteca QRCode.js via CDN para geração de QR Codes 100% legíveis -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
+    /* =========================================================
+     * VARIÁVEIS DE IDENTIDADE VISUAL (FATEC ITU / CPS) & PLANTA
+     * ========================================================= */
     :root {
       --vinho-900: #540010;
       --vinho-800: #78001A;
       --vinho-700: #9E0B22;
       --vinho-100: #FDF0F2;
       --vinho-200: #F8D7DD;
+
       --chumbo-950: #11161C;
       --chumbo-900: #1C2127;
       --chumbo-800: #2C333D;
@@ -23,6 +27,7 @@
       --chumbo-200: #E4E7EB;
       --chumbo-100: #F4F6F8;
       --branco: #FFFFFF;
+
       --sucesso-bg: #ECFDF5;
       --sucesso-fg: #065F46;
       --sucesso-bd: #A7F3D0;
@@ -35,6 +40,8 @@
       --info-bg: #EFF6FF;
       --info-fg: #1E40AF;
       --info-bd: #BFDBFE;
+
+      /* Cores semânticas da Planta Baixa */
       --corr: #E4E9F0;
       --wall: #8D99A8;
       --c-aula: #CFE2FF;
@@ -44,6 +51,7 @@
       --c-esp: #E2D6FF;
       --c-wc: #D9DFE7;
       --c-circ: #EEF1F5;
+
       --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 16px;
@@ -51,149 +59,1073 @@
       --shadow-md: 0 6px 20px rgba(28, 33, 39, 0.10);
       --shadow-lg: 0 16px 38px rgba(28, 33, 39, 0.18);
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--chumbo-100); color: var(--chumbo-900); line-height: 1.5; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--chumbo-100);
+      color: var(--chumbo-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
     button, input, select, textarea { font-family: inherit; font-size: 1rem; }
-    .topbar { background: linear-gradient(135deg, var(--chumbo-950) 0%, var(--vinho-800) 100%); color: var(--branco); padding: 1rem; box-shadow: var(--shadow-md); }
-    .topbar-inner { max-width: 1160px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.85rem; }
+
+    .topbar {
+      background: linear-gradient(135deg, var(--chumbo-950) 0%, var(--vinho-800) 100%);
+      color: var(--branco);
+      padding: calc(0.9rem + env(safe-area-inset-top, 0px)) 1rem 1.2rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .topbar-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
     .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
     .brand { display: flex; align-items: center; gap: 0.75rem; }
-    .brand-badge { width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--vinho-700); border: 1px solid rgba(255, 255, 255, 0.28); display: grid; place-items: center; font-weight: 800; font-size: 0.9rem; }
-    .brand-text h1 { font-size: 1.1rem; font-weight: 700; }
-    .location-hero { background: rgba(255, 255, 255, 0.11); border: 1px solid rgba(255, 255, 255, 0.24); border-radius: var(--radius-md); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .brand-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      background: var(--vinho-700);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 { font-size: 0.95rem; font-weight: 700; line-height: 1.2; word-break: break-word; }
+    .brand-text p { font-size: 0.77rem; color: rgba(255, 255, 255, 0.82); }
+
+    .cps-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.28rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      white-space: nowrap;
+    }
+
+    .location-hero {
+      background: rgba(255, 255, 255, 0.11);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: var(--radius-md);
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
     .location-hero-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; }
-    .here-badge { padding: 0.24rem 0.65rem; border-radius: 999px; font-size: 0.74rem; font-weight: 800; background: var(--branco); color: var(--vinho-800); }
-    .btn-ghost-light { background: rgba(255, 255, 255, 0.15); color: var(--branco); border: 1px solid rgba(255, 255, 255, 0.3); padding: 0.42rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+    .location-hero-info { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; font-size: 0.9rem; }
+
+    .here-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.24rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      background: var(--branco);
+      color: var(--vinho-800);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    }
+
+    .btn-ghost-light {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--branco);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.42rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+
+    .btn-ghost-light:hover { background: rgba(255, 255, 255, 0.28); }
+
     .quick-qr-actions { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
-    .quick-action-btn { padding: 0.58rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.83rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; text-align: center; }
-    .qa-primary { background: var(--branco); color: var(--vinho-800); }
+
+    .quick-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.58rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.83rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: transform 0.12s, background 0.15s, box-shadow 0.15s;
+      text-align: center;
+    }
+
+    .quick-action-btn:active { transform: scale(0.98); }
+    .qa-primary { background: var(--branco); color: var(--vinho-800); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16); }
+    .qa-primary:hover { background: var(--vinho-100); }
     .qa-secondary { background: rgba(17, 22, 28, 0.45); color: var(--branco); border-color: rgba(255, 255, 255, 0.28); }
+    .qa-secondary:hover { background: rgba(17, 22, 28, 0.72); }
+
     .container { max-width: 1160px; margin: 0 auto; padding: 1rem; }
-    .qr-simulator-card { background: var(--branco); border: 1px solid var(--chumbo-200); border-top: 4px solid var(--vinho-800); border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1rem; display: grid; grid-template-columns: 1fr; gap: 1rem; }
+
+    .qr-simulator-card {
+      background: var(--branco);
+      border: 1px solid var(--chumbo-200);
+      border-top: 4px solid var(--vinho-800);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
     .qr-simulator-card.hidden { display: none; }
-    .qr-preview-box { background: var(--chumbo-100); border: 1px dashed var(--chumbo-300); border-radius: var(--radius-md); padding: 0.85rem; display: flex; align-items: center; gap: 0.9rem; }
-    .qr-svg-frame { background: var(--branco); padding: 0.45rem; border-radius: var(--radius-sm); border: 1px solid var(--chumbo-200); flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-width: 120px; min-height: 120px; }
-    .qr-meta { flex: 1; }
-    .qr-url-box { display: block; margin: 0.35rem 0 0.6rem; padding: 0.35rem 0.55rem; background: var(--branco); border: 1px solid var(--chumbo-200); border-radius: 6px; font-family: monospace; font-size: 0.75rem; color: var(--vinho-800); word-break: break-all; }
-    .main-nav-wrap { position: sticky; top: 0; z-index: 25; background: var(--chumbo-100); padding: 0.35rem 0 0.75rem; }
-    .main-nav { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; }
-    .nav-tab { flex: 0 0 auto; min-width: 162px; background: var(--branco); border: 1px solid var(--chumbo-200); border-radius: var(--radius-md); padding: 0.62rem 0.82rem; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 0.22rem; }
-    .nav-tab.active { background: var(--vinho-800); border-color: var(--vinho-800); color: var(--branco); }
-    .nav-code { font-size: 0.66rem; font-weight: 800; text-transform: uppercase; color: var(--vinho-800); background: var(--vinho-100); padding: 0.12rem 0.45rem; border-radius: 999px; width: fit-content; }
+    .qr-sim-header h2 { font-size: 1rem; color: var(--chumbo-900); margin-bottom: 0.2rem; }
+    .qr-sim-header p { font-size: 0.84rem; color: var(--chumbo-500); margin-bottom: 0.75rem; }
+
+    .qr-preview-box {
+      background: var(--chumbo-100);
+      border: 1px dashed var(--chumbo-300);
+      border-radius: var(--radius-md);
+      padding: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .qr-svg-frame {
+      background: var(--branco);
+      padding: 0.45rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--chumbo-200);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 120px;
+      min-height: 120px;
+    }
+
+    .qr-meta { min-width: 0; flex: 1; }
+    .qr-meta strong { display: block; font-size: 0.9rem; color: var(--chumbo-900); }
+
+    .qr-url-box {
+      display: block;
+      margin: 0.35rem 0 0.6rem;
+      padding: 0.35rem 0.55rem;
+      background: var(--branco);
+      border: 1px solid var(--chumbo-200);
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.75rem;
+      color: var(--vinho-800);
+      word-break: break-all;
+    }
+
+    .main-nav-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 25;
+      background: var(--chumbo-100);
+      padding: 0.35rem 0 0.75rem;
+    }
+
+    .main-nav {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-tab {
+      flex: 0 0 auto;
+      min-width: 162px;
+      background: var(--branco);
+      border: 1px solid var(--chumbo-200);
+      border-radius: var(--radius-md);
+      padding: 0.62rem 0.82rem;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+      transition: all 0.18s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-tab:hover { border-color: var(--vinho-700); }
+    .nav-tab.active {
+      background: var(--vinho-800);
+      border-color: var(--vinho-800);
+      color: var(--branco);
+      box-shadow: 0 4px 12px rgba(120, 0, 26, 0.24);
+    }
+
+    .nav-code {
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--vinho-800);
+      background: var(--vinho-100);
+      width: fit-content;
+      padding: 0.12rem 0.45rem;
+      border-radius: 999px;
+    }
+
     .nav-tab.active .nav-code { background: rgba(255, 255, 255, 0.2); color: var(--branco); }
-    .tab-panel { display: none; }
+    .nav-label { font-size: 0.82rem; font-weight: 700; line-height: 1.25; }
+
+    .tab-panel { display: none; animation: fadeSlide 0.2s ease; }
     .tab-panel.active { display: block; }
-    .card { background: var(--branco); border: 1px solid var(--chumbo-200); border-radius: var(--radius-lg); padding: 1.15rem; margin-bottom: 1rem; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.65rem 1.05rem; border-radius: var(--radius-sm); border: none; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--branco);
+      border: 1px solid var(--chumbo-200);
+      border-radius: var(--radius-lg);
+      padding: 1.15rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1rem;
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--chumbo-200);
+      padding-bottom: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title { font-size: 1.15rem; font-weight: 700; color: var(--chumbo-900); margin-top: 0.2rem; }
+    .card-subtitle { font-size: 0.85rem; color: var(--chumbo-500); margin-top: 0.15rem; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.65rem 1.05rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-decoration: none;
+    }
+
     .btn-primary { background: var(--vinho-800); color: var(--branco); }
+    .btn-primary:hover { background: var(--vinho-900); }
+    .btn-secondary { background: var(--chumbo-800); color: var(--branco); }
+    .btn-secondary:hover { background: var(--chumbo-900); }
     .btn-outline { background: var(--branco); color: var(--chumbo-800); border: 1px solid var(--chumbo-300); }
+    .btn-outline:hover { background: var(--chumbo-100); }
     .btn-sm { padding: 0.42rem 0.75rem; font-size: 0.8rem; }
-    .form-control { width: 100%; padding: 0.62rem 0.75rem; border: 1px solid var(--chumbo-300); border-radius: var(--radius-sm); font-size: 0.92rem; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(17, 22, 28, 0.74); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
+    .btn-block { width: 100%; }
+
+    .alert-strip {
+      padding: 0.75rem 0.9rem;
+      border-radius: var(--radius-md);
+      font-size: 0.84rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--chumbo-200);
+      background: var(--chumbo-100);
+      color: var(--chumbo-800);
+    }
+    .alert-strip.warn { background: var(--alerta-bg); border-color: var(--alerta-bd); color: var(--alerta-fg); }
+    .alert-strip.info { background: var(--info-bg); border-color: var(--info-bd); color: var(--info-fg); }
+
+    .svc01-top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: var(--chumbo-100);
+      border: 1px solid var(--chumbo-200);
+      border-radius: var(--radius-md);
+      padding: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .svc01-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+
+    .detail-item {
+      background: var(--chumbo-100);
+      border: 1px solid var(--chumbo-200);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.85rem;
+    }
+
+    .detail-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--chumbo-500); margin-bottom: 0.2rem; }
+    .detail-val { font-size: 0.9rem; font-weight: 600; color: var(--chumbo-900); }
+
+    .rules-list { list-style: none; display: grid; gap: 0.4rem; margin-top: 0.35rem; }
+    .rules-list li { font-size: 0.84rem; color: var(--chumbo-700); padding-left: 1rem; position: relative; }
+    .rules-list li::before { content: "•"; color: var(--vinho-800); font-weight: 900; position: absolute; left: 0.15rem; }
+
+    .mini-schedule { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.4rem; }
+    .mini-schedule th, .mini-schedule td { border: 1px solid var(--chumbo-200); padding: 0.5rem 0.65rem; text-align: left; }
+    .mini-schedule th { background: var(--chumbo-900); color: var(--branco); font-weight: 600; }
+
+    .kb-accordion { display: grid; gap: 0.5rem; margin-top: 0.5rem; }
+    .kb-item { border: 1px solid var(--chumbo-200); border-radius: var(--radius-sm); background: var(--branco); overflow: hidden; }
+    .kb-item summary { padding: 0.65rem 0.8rem; font-size: 0.84rem; font-weight: 700; cursor: pointer; color: var(--chumbo-900); background: var(--chumbo-100); list-style: none; }
+    .kb-item summary::-webkit-details-marker { display: none; }
+    .kb-item summary::before { content: "▸ "; color: var(--vinho-800); }
+    .kb-item[open] summary::before { content: "▾ "; }
+    .kb-item-body { padding: 0.7rem 0.85rem; font-size: 0.82rem; color: var(--chumbo-700); border-top: 1px solid var(--chumbo-200); }
+
+    .plan-layout { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+    .wayfinding-shortcuts { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.85rem; }
+    .shortcut-pill {
+      font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.68rem; border-radius: 999px;
+      border: 1px solid var(--chumbo-300); background: var(--branco); color: var(--chumbo-800); cursor: pointer; transition: all 0.15s;
+    }
+    .shortcut-pill:hover { border-color: var(--vinho-800); background: var(--vinho-100); color: var(--vinho-900); }
+
+    .search-box { margin-bottom: 0.85rem; }
+    .search-results { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.55rem; }
+    .chip { font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.7rem; border-radius: 999px; cursor: pointer; background: var(--chumbo-100); color: var(--chumbo-800); border: 1px solid var(--chumbo-300); }
+    .chip:hover { border-color: var(--vinho-700); background: var(--vinho-100); }
+
+    .floor-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: var(--chumbo-200); border-radius: var(--radius-md); margin-bottom: 0.85rem; }
+    .floor-tabs button {
+      font-weight: 700; font-size: 0.88rem; padding: 0.6rem 0.35rem; border: 0; border-radius: 9px;
+      background: transparent; color: var(--chumbo-600); cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+    }
+    .floor-tabs button[aria-selected="true"] { background: var(--branco); color: var(--vinho-800); box-shadow: var(--shadow-sm); }
+    .floor-here-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--vinho-700); display: inline-block; }
+
+    .legend-list { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; margin-bottom: 0.85rem; list-style: none; font-size: 0.76rem; color: var(--chumbo-600); }
+    .legend-list li { display: flex; align-items: center; gap: 0.35rem; }
+    .legend-list i { width: 12px; height: 12px; border-radius: 4px; border: 1px solid var(--wall); display: inline-block; }
+
+    .svg-plan-container { background: var(--chumbo-100); border: 1px solid var(--chumbo-200); border-radius: var(--radius-md); padding: 0.65rem; max-width: 460px; margin: 0 auto; }
+    svg#campusSvg { display: block; width: 100%; height: auto; }
+
+    .bld { fill: var(--corr); stroke: var(--wall); stroke-width: 3; }
+    .room { cursor: pointer; transition: opacity 0.15s; }
+    .room rect.r { stroke: var(--wall); stroke-width: 1.5; transition: stroke 0.15s, stroke-width 0.15s; }
+    .room text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 700; fill: #131C26; pointer-events: none; }
+    .room .step { stroke: var(--wall); stroke-width: 1; opacity: 0.55; }
+    .room.dim { opacity: 0.25; }
+    .room.sel rect.r { stroke: #0A62D8; stroke-width: 3.8; }
+    .room.here rect.r { stroke: var(--vinho-800); stroke-width: 4; }
+
+    .k-aula rect.r { fill: var(--c-aula); }
+    .k-lab rect.r { fill: var(--c-lab); }
+    .k-admin rect.r { fill: var(--c-admin); }
+    .k-conv rect.r { fill: var(--c-conv); }
+    .k-esp rect.r { fill: var(--c-esp); }
+    .k-wc rect.r { fill: var(--c-wc); }
+    .k-circ rect.r { fill: var(--c-circ); }
+
+    .furn rect { fill: var(--branco); stroke: var(--wall); stroke-width: 1.3; }
+    .furn .ch { fill: var(--wall); stroke: none; opacity: 0.65; }
+
+    @keyframes pulsePin { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    .here-pin-group { pointer-events: none; transform-box: fill-box; transform-origin: center; animation: pulsePin 2s infinite ease-in-out; }
+
+    .wayfinding-card { background: var(--branco); border: 1px solid var(--chumbo-200); border-top: 4px solid var(--vinho-800); border-radius: var(--radius-lg); padding: 1.1rem; box-shadow: var(--shadow-sm); }
+    .route-box { background: var(--vinho-100); border: 1px solid var(--vinho-200); border-radius: var(--radius-md); padding: 0.85rem; margin-bottom: 0.9rem; font-size: 0.86rem; color: var(--vinho-900); }
+    .route-box strong { display: block; margin-bottom: 0.3rem; font-size: 0.92rem; }
+    .route-steps { list-style: decimal; padding-left: 1.25rem; margin-top: 0.45rem; display: grid; gap: 0.3rem; font-size: 0.83rem; }
+    .action-stack { display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-top: 1rem; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: 0.9rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group label { font-size: 0.84rem; font-weight: 600; color: var(--chumbo-800); }
+    .required-mark { color: var(--vinho-700); }
+    .form-control { width: 100%; padding: 0.62rem 0.75rem; border: 1px solid var(--chumbo-300); border-radius: var(--radius-sm); background: var(--branco); color: var(--chumbo-900); font-size: 0.92rem; }
+    .form-control:focus { outline: none; border-color: var(--vinho-700); box-shadow: 0 0 0 3px rgba(158, 11, 34, 0.14); }
+    textarea.form-control { min-height: 92px; resize: vertical; }
+    .form-hint { font-size: 0.76rem; color: var(--chumbo-500); }
+    .form-error { font-size: 0.78rem; color: var(--perigo-fg); font-weight: 600; display: none; }
+    .form-group.invalid .form-control { border-color: var(--vinho-700); background: var(--perigo-bg); }
+    .form-group.invalid .form-error { display: block; }
+
+    .radio-cards { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
+    .radio-card { display: flex; align-items: center; gap: 0.65rem; padding: 0.68rem 0.85rem; border: 1px solid var(--chumbo-300); border-radius: var(--radius-sm); cursor: pointer; }
+    .radio-card input { accent-color: var(--vinho-800); width: 18px; height: 18px; }
+    .radio-card:has(input:checked) { border-color: var(--vinho-800); background: var(--vinho-100); }
+
+    .sla-preview-box { background: var(--chumbo-100); border: 1px solid var(--chumbo-300); border-left: 4px solid var(--vinho-800); border-radius: var(--radius-sm); padding: 0.75rem 0.9rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.84rem; }
+    .sla-pill { padding: 0.22rem 0.6rem; border-radius: 999px; font-weight: 800; font-size: 0.76rem; background: var(--vinho-800); color: var(--branco); }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(17, 22, 28, 0.74); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 100; backdrop-filter: blur(3px); }
     .modal-backdrop.open { display: flex; }
-    .modal-card { background: var(--branco); border-radius: var(--radius-lg); max-width: 880px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.25rem; }
+    .modal-card { background: var(--branco); border-radius: var(--radius-lg); max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); border-top: 6px solid var(--vinho-800); animation: popIn 0.2s ease; }
+    .modal-card.wide { max-width: 880px; }
+
+    @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-body { padding: 1.25rem; }
+
+    .protocol-banner { background: var(--sucesso-bg); border: 1px solid var(--sucesso-bd); color: var(--sucesso-fg); border-radius: var(--radius-md); padding: 0.9rem; text-align: center; margin-bottom: 1rem; }
+    .protocol-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 1.35rem; font-weight: 800; letter-spacing: 0.04em; margin-top: 0.25rem; color: var(--chumbo-900); }
+
+    .summary-list { border: 1px solid var(--chumbo-200); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 1rem; }
+    .summary-row { display: grid; grid-template-columns: 135px 1fr; gap: 0.5rem; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--chumbo-200); font-size: 0.84rem; }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-key { font-weight: 700; color: var(--chumbo-600); }
+    .summary-val { color: var(--chumbo-900); word-break: break-word; }
+
+    .csat-box { background: var(--chumbo-100); border: 1px solid var(--chumbo-200); border-radius: var(--radius-md); padding: 0.75rem; margin-bottom: 1rem; text-align: center; }
+    .csat-stars { display: flex; justify-content: center; gap: 0.4rem; margin-top: 0.45rem; }
+    .csat-btn { width: 38px; height: 38px; border-radius: var(--radius-sm); border: 1px solid var(--chumbo-300); background: var(--branco); font-weight: 800; cursor: pointer; }
+    .csat-btn:hover, .csat-btn.selected { background: var(--vinho-800); color: var(--branco); border-color: var(--vinho-800); }
+
+    .modal-actions { display: grid; grid-template-columns: 1fr; gap: 0.55rem; }
+
     .plates-grid { display: grid; grid-template-columns: 1fr; gap: 0.85rem; margin: 1rem 0; }
     .qr-plate { border: 2px solid var(--chumbo-900); border-radius: var(--radius-md); padding: 0.85rem; display: flex; align-items: center; gap: 0.85rem; background: var(--branco); page-break-inside: avoid; }
     .qr-plate-info h4 { font-size: 0.95rem; color: var(--vinho-800); margin-bottom: 0.2rem; }
     .qr-plate-info p { font-size: 0.75rem; color: var(--chumbo-800); line-height: 1.35; margin-bottom: 0.3rem; }
-    .qr-plate-footer { font-family: monospace; font-size: 0.68rem; color: var(--chumbo-600); word-break: break-all; }
+    .qr-plate-footer { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.68rem; color: var(--chumbo-600); word-break: break-all; }
+
+    .toast {
+      position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--chumbo-900); color: var(--branco); padding: 0.65rem 1.1rem; border-radius: 999px;
+      font-size: 0.85rem; font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.25s ease;
+      z-index: 200; box-shadow: var(--shadow-md); text-align: center; max-width: 92vw;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    footer { text-align: center; padding: 1.5rem 1rem 2.25rem; font-size: 0.78rem; color: var(--chumbo-500); }
+
     @media (min-width: 768px) {
+      .brand-text h1 { font-size: 1.25rem; }
       .quick-qr-actions { grid-template-columns: repeat(3, 1fr); }
-      .qr-simulator-card { grid-template-columns: 1.2fr 1fr; }
-      .main-nav { display: grid; grid-template-columns: repeat(5, 1fr); }
+      .qr-simulator-card { grid-template-columns: 1.2fr 1fr; align-items: center; }
+      .main-nav { display: grid; grid-template-columns: repeat(5, 1fr); overflow-x: visible; }
+      .nav-tab { min-width: 0; }
+      .svc01-grid { grid-template-columns: 1.1fr 0.9fr; }
+      .plan-layout { grid-template-columns: 1.05fr 0.95fr; }
+      .wayfinding-card { position: sticky; top: 5.2rem; }
+      .form-grid.two-cols { grid-template-columns: repeat(2, 1fr); }
+      .form-group.full-span { grid-column: 1 / -1; }
+      .radio-cards { grid-template-columns: repeat(2, 1fr); }
+      .modal-actions { grid-template-columns: 1fr 1fr; }
+      .modal-actions .btn-close-modal { grid-column: 1 / -1; }
       .plates-grid { grid-template-columns: repeat(2, 1fr); }
     }
+
     @media print {
       body * { visibility: hidden; }
       #platesModal, #platesModal * { visibility: visible; }
-      #platesModal { position: absolute; inset: 0; background: #FFF; padding: 0; }
+      #platesModal { position: absolute; inset: 0; background: #FFFFFF; padding: 0; }
+      #platesModal .modal-card { box-shadow: none; border: none; max-width: 100%; max-height: none; }
       .no-print { display: none !important; }
     }
   </style>
 </head>
 <body>
 
+  <!-- CABEÇALHO INSTITUCIONAL & BANNER DE QR CODE -->
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand-row">
         <div class="brand">
-          <div class="brand-badge">FATEC</div>
+          <div class="brand-badge" aria-hidden="true">FATEC</div>
           <div class="brand-text">
             <h1>Portal de Serviços e Planta Interativa — Fatec Itu</h1>
+            <p>Faculdade de Tecnologia Dom Amaury Castanho • Canal Único de Serviços por QR Code</p>
           </div>
         </div>
+        <span class="cps-tag">Centro Paula Souza</span>
       </div>
 
-      <div class="location-hero">
+      <div class="location-hero" aria-live="polite">
         <div class="location-hero-top">
-          <div>
+          <div class="location-hero-info">
             <span class="here-badge" id="qrStatusBadge">📍 Você está aqui</span>
-            <span id="headerLocationText">Você está em: <strong>Sala 1</strong> (Térreo)</span>
+            <span id="headerLocationText">
+              Você está em: <strong>Sala 1</strong> (Térreo • Sala de aula)
+            </span>
           </div>
-          <button type="button" class="btn-ghost-light" id="toggleQrSimBtn">QR Codes das salas / Simular leitura</button>
+          <button type="button" class="btn-ghost-light" id="toggleQrSimBtn">
+            QR Codes das salas / Simular leitura
+          </button>
         </div>
+
         <div class="quick-qr-actions">
-          <button type="button" class="quick-action-btn qa-primary" id="heroOpenTicketBtn">🛠️ Abrir chamado nesta sala (SVC-02)</button>
-          <button type="button" class="quick-action-btn qa-secondary" id="heroOpenMapBtn">🗺️ Navegar no campus / Mapa (SVC-03)</button>
-          <button type="button" class="quick-action-btn qa-secondary" id="heroOpenInfoBtn">📋 Informações da sala (SVC-01)</button>
+          <button type="button" class="quick-action-btn qa-primary" id="heroOpenTicketBtn">
+            🛠️ Abrir chamado nesta sala (SVC-02)
+          </button>
+          <button type="button" class="quick-action-btn qa-secondary" id="heroOpenMapBtn">
+            🗺️ Navegar no campus / Mapa (SVC-03)
+          </button>
+          <button type="button" class="quick-action-btn qa-secondary" id="heroOpenInfoBtn">
+            📋 Informações e regras da sala (SVC-01)
+          </button>
         </div>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <section class="qr-simulator-card" id="qrSimulatorPanel">
-      <div>
+
+    <!-- SIMULADOR E GERADOR DE QR CODE POR SALA -->
+    <section class="qr-simulator-card" id="qrSimulatorPanel" aria-label="Gerador e Simulador de QR Code por Sala">
+      <div class="qr-sim-header">
         <h2>QR Codes por Sala — Leitura e Impressão</h2>
-        <p style="font-size: 0.85rem; margin-bottom: 0.75rem;">Selecione a sala para gerar o QR Code real e testar a leitura pela câmara do telemóvel.</p>
+        <p>Cada sala da Fatec Itu possui um QR Code exclusivo (<code>?sala=...</code>). Selecione qualquer ambiente para testar a leitura no celular ou gerar as placas para as portas.</p>
+
         <div class="form-group">
           <label for="qrRoomSelect">Escolha a sala do QR Code</label>
           <select id="qrRoomSelect" class="form-control"></select>
         </div>
+
         <div style="margin-top:0.65rem;">
-          <button type="button" class="btn btn-outline btn-sm" id="openPlatesModalBtn">🖨️ Ver grade de placas QR para impressão</button>
+          <button type="button" class="btn btn-outline btn-sm" id="openPlatesModalBtn">
+            🖨️ Ver grade de placas QR para impressão
+          </button>
         </div>
       </div>
 
       <div class="qr-preview-box">
-        <div class="qr-svg-frame" id="qrSvgContainer"></div>
+        <div class="qr-svg-frame" id="qrSvgContainer" aria-label="QR Code da sala selecionada"></div>
         <div class="qr-meta">
-          <strong id="qrRoomTitle">QR Code — Sala 1</strong>
+          <strong id="qrRoomTitle">QR Code — Sala 1 (Térreo)</strong>
           <span class="qr-url-box" id="qrUrlPreview">?sala=sala-1</span>
-          <button type="button" class="btn btn-primary btn-sm" id="simulateScanBtn">Simular leitura deste QR</button>
+          <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+            <button type="button" class="btn btn-primary btn-sm" id="simulateScanBtn">
+              Simular leitura deste QR
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" id="copyQrLinkBtn">
+              Copiar link
+            </button>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- ABAS DO CATÁLOGO DE SERVIÇOS (SVC-01 A SVC-05) -->
     <div class="main-nav-wrap">
-      <nav class="main-nav">
-        <button type="button" class="nav-tab active" data-tab="tab-svc01"><span class="nav-code">SVC-01</span><span>Informações do Ambiente</span></button>
-        <button type="button" class="nav-tab" data-tab="tab-svc02"><span class="nav-code">SVC-02</span><span>Chamados de TI</span></button>
-        <button type="button" class="nav-tab" data-tab="tab-svc03"><span class="nav-code">SVC-03</span><span>Navegação no Campus</span></button>
-        <button type="button" class="nav-tab" data-tab="tab-svc04"><span class="nav-code">SVC-04</span><span>Softwares</span></button>
-        <button type="button" class="nav-tab" data-tab="tab-svc05"><span class="nav-code">SVC-05</span><span>Liberação de Sites</span></button>
+      <nav class="main-nav" aria-label="Catálogo de Serviços Fatec Itu">
+        <button type="button" class="nav-tab active" data-tab="tab-svc01">
+          <span class="nav-code">SVC-01</span>
+          <span class="nav-label">Informações do Ambiente</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="tab-svc02">
+          <span class="nav-code">SVC-02</span>
+          <span class="nav-label">Chamados de TI e Manutenção</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="tab-svc03">
+          <span class="nav-code">SVC-03 • MAPA</span>
+          <span class="nav-label">Navegação no Campus</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="tab-svc04">
+          <span class="nav-code">SVC-04 • DOCENTES</span>
+          <span class="nav-label">Requisição de Software</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="tab-svc05">
+          <span class="nav-code">SVC-05 • DOCENTES</span>
+          <span class="nav-label">Liberação de Sites/Serviços</span>
+        </button>
       </nav>
     </div>
 
-    <section class="tab-panel active" id="tab-svc01"><div class="card"><h2>SVC-01 — Informações do Ambiente</h2><p>Informações detalhadas sobre o ambiente onde se encontra.</p></div></section>
-    <section class="tab-panel" id="tab-svc02"><div class="card"><h2>SVC-02 — Chamados de TI e Manutenção</h2><p>Formulário de suporte técnico para salas e laboratórios.</p></div></section>
-    <section class="tab-panel" id="tab-svc03"><div class="card"><h2>SVC-03 — Navegação no Campus</h2><p>Mapa e rotas entre ambientes da unidade.</p></div></section>
-    <section class="tab-panel" id="tab-svc04"><div class="card"><h2>SVC-04 — Requisição de Software</h2><p>Solicitações de instalação de softwares acadêmicos.</p></div></section>
-    <section class="tab-panel" id="tab-svc05"><div class="card"><h2>SVC-05 — Liberação de Sites</h2><p>Solicitações de desbloqueio de rede e firewall.</p></div></section>
-  </main>
+    <!-- ABA 1: SVC-01 -->
+    <section class="tab-panel active" id="tab-svc01" aria-labelledby="svc01Heading">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="nav-code">SVC-01 • CATÁLOGO DE SERVIÇOS</span>
+            <h2 class="card-title" id="svc01Heading">Informações do Ambiente</h2>
+            <p class="card-subtitle">Nome oficial, pavimento, responsável, equipamentos registrados no CMDB, regras de uso e horários.</p>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:0.45rem;">
+            <button type="button" class="btn btn-primary btn-sm" id="svc01OpenTicketBtn">
+              Abrir chamado aqui (SVC-02)
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" id="svc01ViewOnMapBtn">
+              Ver no mapa (SVC-03)
+            </button>
+          </div>
+        </div>
 
-  <div class="modal-backdrop" id="platesModal">
-    <div class="modal-card">
-      <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h2>Placas de Sinalização com QR Code</h2>
-        <div>
-          <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Imprimir Placas</button>
-          <button type="button" class="btn btn-outline btn-sm" id="closePlatesModalBtn">Fechar</button>
+        <div class="svc01-top-bar">
+          <div class="form-group" style="flex:1; min-width:240px;">
+            <label for="svc01RoomSelect">Ambiente consultado</label>
+            <select id="svc01RoomSelect" class="form-control"></select>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="svc01BackToMyRoomBtn">
+            📍 Voltar para minha sala atual
+          </button>
+        </div>
+
+        <div class="alert-strip warn" id="svc01KnownErrorBanner" style="display:none;"></div>
+
+        <div class="svc01-grid">
+          <div style="display:flex; flex-direction:column; gap:0.85rem;">
+            <div class="detail-item" style="border-left:4px solid var(--vinho-800); background:var(--branco);">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; margin-bottom:0.25rem;">
+                <span class="nav-code" id="s01CatBadge">Sala de aula</span>
+                <span style="font-size:0.8rem; font-weight:700; color:var(--vinho-800);" id="s01FloorLabel">Térreo</span>
+              </div>
+              <h3 style="font-size:1.25rem; color:var(--chumbo-900);" id="s01RoomName">Sala 1</h3>
+              <p style="font-size:0.86rem; color:var(--chumbo-600);" id="s01OfficialTitle">Sala de Aula 01 — Bloco Térreo</p>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Responsável e Validação de Conteúdo</div>
+              <div class="detail-val" id="s01Responsible">Coordenação (Prof. Tadeu) & Manutenção Predial</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Infraestrutura e Ativos (CMDB)</div>
+              <div class="detail-val" id="s01Resources">Carteiras universitárias, televisor, quadro branco e cobertura Wi-Fi.</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Regras de Utilização do Ambiente</div>
+              <ul class="rules-list" id="s01Rules"></ul>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.85rem;">
+            <div class="detail-item" style="background:var(--branco);">
+              <div class="detail-label">Grade / Funcionamento por Turno</div>
+              <table class="mini-schedule">
+                <thead>
+                  <tr>
+                    <th>Turno</th>
+                    <th>Atividade / Disponibilidade</th>
+                  </tr>
+                </thead>
+                <tbody id="s01ScheduleBody"></tbody>
+              </table>
+            </div>
+
+            <div class="detail-item" style="background:var(--branco);">
+              <div class="detail-label">Autoatendimento Rápido (Shift-Left)</div>
+              <div class="kb-accordion">
+                <details class="kb-item">
+                  <summary>C-02: Wi-Fi fraco ou sem conexão no celular/notebook?</summary>
+                  <div class="kb-item-body">
+                    Desative e ative o Wi-Fi do aparelho e confira se está na rede institucional.
+                  </div>
+                </details>
+                <details class="kb-item">
+                  <summary>C-03: Computador do laboratório travou ou não liga?</summary>
+                  <div class="kb-item-body">
+                    Confira cabo de energia/rede. Se persistir, mude de estação e abra chamado em SVC-02.
+                  </div>
+                </details>
+                <details class="kb-item">
+                  <summary>C-04: TV da sala sem imagem ou sem internet?</summary>
+                  <div class="kb-item-body">
+                    Verifique a entrada HDMI no controle e o encaixe do cabo.
+                  </div>
+                </details>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="plates-grid" id="platesGridContainer"></div>
+    </section>
+
+    <!-- ABA 2: SVC-02 -->
+    <section class="tab-panel" id="tab-svc02" aria-labelledby="svc02Heading">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="nav-code">SVC-02 • CENTRAL DE SERVIÇOS (N1)</span>
+            <h2 class="card-title" id="svc02Heading">Chamados de TI e Manutenção</h2>
+            <p class="card-subtitle">Registro em menos de 1 minuto com identificação automática da sala e cálculo de prioridade SLA.</p>
+          </div>
+        </div>
+
+        <form id="formSvc02" novalidate>
+          <div class="form-grid two-cols">
+            <div class="form-group">
+              <label for="svc02Local">Sala / Local da ocorrência <span class="required-mark">*</span></label>
+              <select id="svc02Local" name="local" class="form-control" required></select>
+              <span class="form-error">Selecione a sala ou ambiente.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc02Categoria">Categoria <span class="required-mark">*</span></label>
+              <select id="svc02Categoria" name="categoria" class="form-control" required>
+                <option value="">Selecione a categoria...</option>
+                <option value="TI/Computador">TI/Computador</option>
+                <option value="Televisor (TV)">Televisor / TV</option>
+                <option value="Rede/Wi-Fi">Rede / Wi-Fi</option>
+                <option value="Elétrica/Tomada">Elétrica / Tomada</option>
+                <option value="Ventilador">Ventilador / Climatização</option>
+                <option value="Limpeza/Mobiliário">Limpeza / Mobiliário</option>
+                <option value="Outro">Outro</option>
+              </select>
+              <span class="form-error">Selecione uma categoria.</span>
+            </div>
+
+            <div class="form-group">
+              <label>Tipo de solicitação <span class="required-mark">*</span></label>
+              <div class="radio-cards">
+                <label class="radio-card">
+                  <input type="radio" name="tipoChamado" value="Incidente (Algo parou de funcionar)" checked />
+                  <span><strong>Incidente</strong><br><small style="color:var(--chumbo-500)">Algo parou de funcionar</small></span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="tipoChamado" value="Requisição de Serviço (Quero pedir algo)" />
+                  <span><strong>Requisição</strong><br><small style="color:var(--chumbo-500)">Quero pedir algo / apoio</small></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="svc02Equipamento">Equipamento / Patrimônio (opcional)</label>
+              <input type="text" id="svc02Equipamento" name="equipamento" class="form-control" placeholder="Ex.: PC-12, Televisor..." />
+            </div>
+
+            <div class="form-group">
+              <label for="svc02Impacto">Impacto <span class="required-mark">*</span></label>
+              <select id="svc02Impacto" name="impacto" class="form-control" required>
+                <option value="Baixo">Baixo — Afeta 1 pessoa ou 1 equipamento individual</option>
+                <option value="Médio" selected>Médio — Afeta 2 a 9 usuários ou televisor</option>
+                <option value="Alto">Alto — Afeta laboratório/sala inteira (10+ usuários)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="svc02Urgencia">Urgência <span class="required-mark">*</span></label>
+              <select id="svc02Urgencia" name="urgencia" class="form-control" required>
+                <option value="Alta">Alta — Impede aula, prova ou evento agora</option>
+                <option value="Média" selected>Média — Atrapalha, mas há contorno hoje</option>
+                <option value="Baixa">Baixa — Não urgente (próximas 48h+)</option>
+              </select>
+            </div>
+
+            <div class="form-group full-span">
+              <div class="sla-preview-box" id="slaPreviewBox">
+                <div>
+                  <strong>Prazo estimado (SLA-01):</strong>
+                  <span id="slaText">Primeira resposta em até 4 horas úteis • Restauração em até 3 dias úteis.</span>
+                </div>
+                <span class="sla-pill" id="slaBadge">P3 — Média</span>
+              </div>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="svc02Descricao">Descrição do problema <span class="required-mark">*</span></label>
+              <textarea id="svc02Descricao" name="descricao" class="form-control" required placeholder="Descreva o que está acontecendo..."></textarea>
+              <span class="form-error">Descreva o problema com pelo menos 8 caracteres.</span>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="svc02Contato">Contato para retorno (opcional)</label>
+              <input type="text" id="svc02Contato" name="contato" class="form-control" placeholder="Nome, e-mail ou telefone" />
+            </div>
+          </div>
+
+          <div style="margin-top: 1.1rem;">
+            <button type="submit" class="btn btn-primary btn-block">Enviar Chamado e Gerar Protocolo</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ABA 3: SVC-03 MAPA INTERATIVO & WAYFINDING -->
+    <section class="tab-panel" id="tab-svc03" aria-labelledby="svc03Heading">
+      <div class="plan-layout">
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-header">
+            <div>
+              <span class="nav-code">SVC-03 • WAYFINDING</span>
+              <h2 class="card-title" id="svc03Heading">Navegação no Campus — Fatec Itu</h2>
+              <p class="card-subtitle">Ordem dos pavimentos: Térreo, 1º andar e 2º andar. Toque em qualquer sala para traçar a rota.</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" id="centerMyLocationBtn">
+              📍 Centralizar onde estou
+            </button>
+          </div>
+
+          <div class="wayfinding-shortcuts">
+            <button type="button" class="shortcut-pill" data-goto="secretaria">🏢 Secretaria</button>
+            <button type="button" class="shortcut-pill" data-goto="biblioteca">📚 Biblioteca</button>
+            <button type="button" class="shortcut-pill" data-goto="auditorio">🎭 Auditório</button>
+            <button type="button" class="shortcut-pill" data-goto="cantina">☕ Cantina</button>
+            <button type="button" class="shortcut-pill" data-goto="banheiro-feminino">🚻 Banheiros</button>
+            <button type="button" class="shortcut-pill" data-goto="suporte-t-i">💻 TI</button>
+          </div>
+
+          <div class="search-box">
+            <input type="search" id="roomSearchInput" class="form-control" placeholder="Buscar sala, laboratório, coordenação, elevador..." autocomplete="off" />
+            <div class="search-results" id="roomSearchResults"></div>
+          </div>
+
+          <div class="floor-tabs" role="tablist" id="floorTabs"></div>
+          <ul class="legend-list" id="planLegend"></ul>
+
+          <div class="svg-plan-container">
+            <svg id="campusSvg" role="img" aria-label="Planta baixa do andar selecionado"></svg>
+          </div>
+        </div>
+
+        <aside class="wayfinding-card" aria-live="polite">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; margin-bottom:0.35rem;">
+            <span class="nav-code" id="wfCatBadge">Sala de aula</span>
+            <span style="font-size:0.78rem; font-weight:700; color:var(--vinho-800);" id="wfFloorLabel">Térreo</span>
+          </div>
+
+          <h3 style="font-size:1.25rem; color:var(--chumbo-900); margin-bottom:0.15rem;" id="wfDestName">Sala 1</h3>
+          <p style="font-size:0.84rem; color:var(--chumbo-500); margin-bottom:0.85rem;" id="wfDestSubtitle">Destino selecionado no mapa</p>
+
+          <div class="route-box">
+            <strong id="wfRouteTitle">📍 Você está neste ambiente</strong>
+            <p id="wfRouteSummary">Sua posição atual está marcada no mapa com o pino vinho "VOCÊ ESTÁ AQUI".</p>
+            <ol class="route-steps" id="wfRouteSteps"></ol>
+          </div>
+
+          <div class="detail-item" style="margin-bottom:0.75rem;">
+            <div class="detail-label">Ponto de Partida (Sua Localização Atual)</div>
+            <div class="detail-val" id="wfOriginSummary">Sala 1 (Térreo)</div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label">Acessibilidade e Circulação</div>
+            <div class="detail-val" style="font-weight:500; font-size:0.83rem; color:var(--chumbo-700);">
+              Todos os pavimentos possuem acesso por escadas centrais e elevador acessível.
+            </div>
+          </div>
+
+          <div class="action-stack">
+            <button type="button" class="btn btn-primary btn-block" id="wfInspectSvc01Btn">
+              Ver informações e horários desta sala (SVC-01)
+            </button>
+            <button type="button" class="btn btn-secondary btn-block" id="wfOpenTicketBtn">
+              Abrir chamado nesta sala (SVC-02)
+            </button>
+            <button type="button" class="btn btn-outline btn-block" id="wfSetAsMyLocationBtn">
+              Estou aqui — Definir como minha localização atual
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ABA 4: SVC-04 -->
+    <section class="tab-panel" id="tab-svc04" aria-labelledby="svc04Heading">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="nav-code">SVC-04 • SLA-02: 3 DIAS ÚTEIS</span>
+            <h2 class="card-title" id="svc04Heading">Requisição de Software — Docentes</h2>
+            <p class="card-subtitle">Solicite instalação ou atualização de softwares acadêmicos nos laboratórios e salas.</p>
+          </div>
+        </div>
+
+        <form id="formSvc04" novalidate>
+          <div class="form-grid two-cols">
+            <div class="form-group">
+              <label for="svc04Professor">Nome do professor <span class="required-mark">*</span></label>
+              <input type="text" id="svc04Professor" name="professor" class="form-control" required placeholder="Prof. Me. Nome Completo" />
+              <span class="form-error">Informe o nome completo.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc04Email">E-mail institucional <span class="required-mark">*</span></label>
+              <input type="email" id="svc04Email" name="email" class="form-control" required placeholder="nome.sobrenome@fatec.sp.gov.br" />
+              <span class="form-error">Informe um e-mail institucional válido (@fatec.sp.gov.br).</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc04Ambiente">Laboratório / Sala <span class="required-mark">*</span></label>
+              <select id="svc04Ambiente" name="ambiente" class="form-control" required></select>
+              <span class="form-error">Selecione o ambiente.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc04Disciplina">Disciplina <span class="required-mark">*</span></label>
+              <input type="text" id="svc04Disciplina" name="disciplina" class="form-control" required placeholder="Ex.: Engenharia de Software II" />
+              <span class="form-error">Informe a disciplina.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc04Software">Nome e versão do software <span class="required-mark">*</span></label>
+              <input type="text" id="svc04Software" name="software" class="form-control" required placeholder="Ex.: PostgreSQL 16" />
+              <span class="form-error">Informe a versão.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc04DataLimite">Data limite para instalação <span class="required-mark">*</span></label>
+              <input type="date" id="svc04DataLimite" name="dataLimite" class="form-control" required />
+              <span class="form-error">Selecione a data.</span>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="svc04Link">Link oficial de download <span class="required-mark">*</span></label>
+              <input type="url" id="svc04Link" name="link" class="form-control" required placeholder="https://..." />
+              <span class="form-error">Informe uma URL válida (http:// ou https://).</span>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="svc04Justificativa">Justificativa acadêmica <span class="required-mark">*</span></label>
+              <textarea id="svc04Justificativa" name="justificativa" class="form-control" required placeholder="Descreva o uso em aula..."></textarea>
+              <span class="form-error">Informe a justificativa.</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.1rem;">
+            <button type="submit" class="btn btn-primary btn-block">Enviar Requisição de Software</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ABA 5: SVC-05 -->
+    <section class="tab-panel" id="tab-svc05" aria-labelledby="svc05Heading">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="nav-code">SVC-05 • SLA-02: 3 DIAS ÚTEIS</span>
+            <h2 class="card-title" id="svc05Heading">Liberação de Sites/Serviços — Docentes</h2>
+            <p class="card-subtitle">Solicite desbloqueio de domínios, APIs ou portas de rede no Pi-hole / Firewall FortiGate.</p>
+          </div>
+        </div>
+
+        <form id="formSvc05" novalidate>
+          <div class="form-grid two-cols">
+            <div class="form-group">
+              <label for="svc05Professor">Nome do professor <span class="required-mark">*</span></label>
+              <input type="text" id="svc05Professor" name="professor" class="form-control" required placeholder="Prof. Dr. Nome Completo" />
+              <span class="form-error">Informe o nome do docente.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc05Email">E-mail institucional <span class="required-mark">*</span></label>
+              <input type="email" id="svc05Email" name="email" class="form-control" required placeholder="nome.sobrenome@fatec.sp.gov.br" />
+              <span class="form-error">Informe um e-mail institucional válido (@fatec.sp.gov.br).</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc05Disciplina">Disciplina <span class="required-mark">*</span></label>
+              <input type="text" id="svc05Disciplina" name="disciplina" class="form-control" required placeholder="Ex.: Redes de Computadores" />
+              <span class="form-error">Informe a disciplina.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="svc05Periodo">Período de liberação <span class="required-mark">*</span></label>
+              <select id="svc05Periodo" name="periodo" class="form-control" required>
+                <option value="Temporário">Temporário (data ou aula específica)</option>
+                <option value="Semestral">Semestral (vigente até o fim do semestre)</option>
+              </select>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="svc05Urls">URLs / Domínios ou Portas (Pi-hole / Firewall) <span class="required-mark">*</span></label>
+              <textarea id="svc05Urls" name="urls" class="form-control" required placeholder="Ex.: api.github.com, broker.hivemq.com (TCP 1883)"></textarea>
+              <span class="form-error">Informe os domínios ou portas.</span>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="svc05Justificativa">Justificativa acadêmica <span class="required-mark">*</span></label>
+              <textarea id="svc05Justificativa" name="justificativa" class="form-control" required placeholder="Detalhe o uso pedagógico..."></textarea>
+              <span class="form-error">Informe a justificativa.</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.1rem;">
+            <button type="submit" class="btn btn-primary btn-block">Solicitar Liberação no Firewall/Pi-hole</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Portal de Serviços e Planta Interativa — Fatec Itu • Centro Paula Souza • Gestão de Serviços de TI (ITIL 4)
+  </footer>
+
+  <!-- MODAL DE PROTOCOLO E CSAT -->
+  <div class="modal-backdrop" id="protocolModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-body">
+        <div class="protocol-banner">
+          <div style="font-size:0.86rem; font-weight:700;" id="modalTitle">Solicitação registrada com sucesso!</div>
+          <div class="protocol-code" id="modalProtocolCode">#FATEC-2026-0000</div>
+          <div style="font-size:0.78rem; margin-top:0.2rem;" id="modalTimestamp"></div>
+        </div>
+
+        <h3 style="font-size:0.92rem; margin-bottom:0.5rem; color:var(--chumbo-800);">Resumo do Comprovante</h3>
+        <div class="summary-list" id="modalSummaryList"></div>
+
+        <div class="csat-box">
+          <div style="font-size:0.8rem; font-weight:700; color:var(--chumbo-800);">Avalie a facilidade deste atendimento (CSAT)</div>
+          <div class="csat-stars" id="csatStarsGroup">
+            <button type="button" class="csat-btn" data-score="1">1</button>
+            <button type="button" class="csat-btn" data-score="2">2</button>
+            <button type="button" class="csat-btn" data-score="3">3</button>
+            <button type="button" class="csat-btn" data-score="4">4</button>
+            <button type="button" class="csat-btn" data-score="5">5</button>
+          </div>
+          <div id="csatFeedbackText" style="font-size:0.75rem; color:var(--chumbo-600); margin-top:0.35rem;">Selecione uma nota de 1 (difícil) a 5 (muito fácil)</div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" id="copyReceiptBtn">Copiar comprovante</button>
+          <button type="button" class="btn btn-secondary" id="downloadReceiptBtn">Baixar comprovante (.txt)</button>
+          <button type="button" class="btn btn-outline btn-close-modal" id="closeModalBtn">Fechar</button>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- MODAL DE PLACAS QR IMPRIMÍVEIS -->
+  <div class="modal-backdrop" id="platesModal" role="dialog" aria-modal="true">
+    <div class="modal-card wide">
+      <div class="modal-body">
+        <div class="card-header no-print">
+          <div>
+            <span class="nav-code">ANEXO B.4 • SINALIZAÇÃO INSTITUCIONAL</span>
+            <h2 class="card-title">Placas QR Code por Ambiente — Fatec Itu</h2>
+            <p class="card-subtitle">Cada placa contém o QR Code exclusivo da sala para fixação na porta.</p>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Imprimir Placas</button>
+            <button type="button" class="btn btn-outline btn-sm" id="closePlatesModalBtn">Fechar</button>
+          </div>
+        </div>
+
+        <div class="plates-grid" id="platesGridContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST DE FEEDBACK -->
+  <div class="toast" id="toastFeedback" role="status"></div>
 
   <script>
     (function () {
@@ -201,31 +1133,301 @@
 
       const BASE_URL = "https://stroomper.github.io/portal-fatec-itu/";
 
-      const ROOMS = [
-        { id: "estagio", name: "Estágio (Térreo)" },
-        { id: "diretoria", name: "Diretoria (Térreo)" },
-        { id: "secretaria", name: "Secretaria (Térreo)" },
-        { id: "auditorio", name: "Auditório (Térreo)" },
-        { id: "sala-1", name: "Sala 1 (Térreo)" },
-        { id: "lab-1", name: "Lab 1 (2º Andar)" },
-        { id: "biblioteca", name: "Biblioteca (2º Andar)" }
+      const W = 340;
+      const CAT = {
+        aula: "Sala de aula",
+        lab: "Laboratório",
+        admin: "Administrativo",
+        conv: "Convivência e apoio",
+        esp: "Espaço especial",
+        wc: "Banheiro",
+        circ: "Escada e elevador"
+      };
+
+      const FLOORS = [
+        { key: "terreo", name: "Térreo", rank: 0 },
+        { key: "andar-1", name: "1º andar", rank: 1 },
+        { key: "andar-2", name: "2º andar", rank: 2 }
       ];
 
+      const DATA = {};
+      const usedIds = {};
+
+      function slug(s) {
+        return s
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
+      }
+
+      function norm(s) {
+        return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function FloorBuilder(key) {
+        const f = { key: key, rooms: [], furn: [], H: 0 };
+        f.add = function (name, cat, x, y, w, h, o) {
+          o = o || {};
+          let id = slug(o.id || name);
+          if (usedIds[id]) id = id + "-" + key;
+          usedIds[id] = true;
+          f.rooms.push({
+            id: id,
+            name: name,
+            short: o.short,
+            cat: cat,
+            x: x,
+            y: y,
+            w: w,
+            h: h,
+            stairs: o.stairs,
+            fs: o.fs,
+            floor: key,
+            hideName: o.hideName
+          });
+        };
+        f.classes = function (y, names, cat, h) {
+          names.forEach(function (n) {
+            f.add(n, cat, 0, y, 200, h);
+            y += h;
+          });
+          return y;
+        };
+        f.wc = function (y) {
+          f.add("Banheiro feminino", "wc", 0, y, 140, 70);
+          f.add("Banheiro PCD", "wc", 140, y, 60, 60, { short: "PCD" });
+          f.add("Banheiro masculino", "wc", 0, y + 70, 140, 70);
+          f.add("Banheiro PCD", "wc", 140, y + 70, 60, 60, { short: "PCD" });
+          return y + 140;
+        };
+        f.stairs = function (y, name) {
+          f.add(name, "circ", 0, y, 200, 60, { stairs: true });
+          return y + 60;
+        };
+        f.services = function (y) {
+          y += 20;
+          f.add("Escada de emergência", "circ", 20, y, 150, 80, { stairs: true, fs: 11 });
+          f.add("Elevador", "circ", 240, y, 80, 80);
+          return y + 100;
+        };
+        return f;
+      }
+
+      // TÉRREO
+      (function () {
+        const f = FloorBuilder("terreo");
+        let y = 0;
+        f.add("Estágio", "admin", 0, 0, 90, 80);
+        f.add("Diretoria", "admin", 90, 0, 250, 80);
+        y = 80;
+        f.add("Secretaria", "admin", 0, y, 200, 70);
+        f.add("Auditório", "esp", 240, y, 100, 140);
+        y += 70;
+        y = f.stairs(y, "Escadas");
+        y = f.classes(y, ["Sala 6", "Sala 5", "Sala 4", "Sala 3", "Sala 2", "Sala 1"], "aula", 90);
+        y = f.wc(y);
+        y = f.stairs(y, "Escadas");
+        f.add("Cantina", "conv", 0, y, 200, 100);
+        f.furn.push([260, y + 25], [260, y + 75]);
+        y += 100;
+        ["Cozinha alunos", "Adm", "Cozinha funcionários"].forEach(function (n) {
+          f.add(n, n === "Adm" ? "admin" : "conv", 0, y, 200, 55);
+          y += 55;
+        });
+        y = f.services(y);
+        f.add("Lab mecânica e metrologia", "lab", 0, y, 340, 100);
+        y += 100;
+        for (let i = 0; i < 6; i++) {
+          f.furn.push([265, 290 + i * 90 + 45]);
+        }
+        f.H = y;
+        DATA.terreo = f;
+      })();
+
+      // 1º ANDAR
+      (function () {
+        const f = FloorBuilder("andar-1");
+        let y = 0;
+        f.add("Suporte T.I", "admin", 0, 0, 340, 80);
+        y = 80;
+        f.add("Cozinha professores", "conv", 0, y, 200, 240);
+        f.add("Coordenação", "admin", 240, y, 100, 80);
+        f.add("Sala professores", "admin", 240, y + 80, 100, 80);
+        f.add("Sala SER", "admin", 240, y + 160, 100, 80);
+        y += 240;
+        y = f.stairs(y, "Escadas");
+        f.classes(y, ["Sala 14", "Sala 13", "Sala 12", "Sala 11", "Sala 10", "Sala 9"], "aula", 90);
+        y += 540;
+        y = f.wc(y);
+        y = f.stairs(y, "Escadas");
+        y = f.classes(y, ["Sala 8", "Sala 7"], "aula", 90);
+        y = f.services(y);
+        f.add("Sala sem nome 1", "admin", 0, y, 170, 100, { hideName: true });
+        f.add("Sala sem nome 2", "admin", 170, y, 170, 100, { hideName: true });
+        y += 100;
+        f.H = y;
+        DATA["andar-1"] = f;
+      })();
+
+      // 2º ANDAR
+      (function () {
+        const f = FloorBuilder("andar-2");
+        let y = 0;
+        f.add("Biblioteca", "esp", 0, 0, 200, 130);
+        f.add("Sala maker", "esp", 240, 0, 100, 130);
+        y = 130;
+        y = f.stairs(y, "Escada");
+        y = f.classes(y, ["Lab 6", "Lab 5", "Lab 4", "Lab 3"], "lab", 90);
+        y = f.wc(y);
+        y = f.stairs(y, "Escadas");
+        y = f.classes(y, ["Lab 2", "Lab 1"], "lab", 90);
+        y = f.services(y);
+        const w = W / 3;
+        ["Lab controle de processos", "Lab comando elétrico", "Lab eletrônica/potência"].forEach(function (n, i) {
+          f.add(n, "lab", i * w, y, w, 100);
+        });
+        y += 100;
+        f.H = y;
+        DATA["andar-2"] = f;
+      })();
+
+      const ALL_ROOMS = [];
+      const ROOM_MAP = {};
+      FLOORS.forEach(function (fl) {
+        DATA[fl.key].rooms.forEach(function (r) {
+          r.floorName = fl.name;
+          r.floorRank = fl.rank;
+          ALL_ROOMS.push(r);
+          ROOM_MAP[r.id] = r;
+        });
+      });
+
+      const QR_ELIGIBLE_ROOMS = ALL_ROOMS.filter(function (r) {
+        return !r.hideName && r.cat !== "wc" && r.cat !== "circ";
+      });
+
+      function getRoomDetails(room) {
+        const customOverrides = {
+          "sala-1": {
+            official: "Sala de Aula 01 — Bloco Térreo",
+            responsible: "Coordenação (Prof. Tadeu) & Manutenção Predial",
+            resources: "Carteiras universitárias, televisor, quadro branco e cobertura Wi-Fi.",
+            knownError: null,
+            rules: ["Desligar televisor e ventilador ao encerrar o último horário.", "Não desconectar cabos fixos da mesa docente."],
+            schedule: [["Manhã (07h40–13h00)", "Aulas regulares"], ["Tarde (13h20–18h40)", "Atividades acadêmicas"], ["Noite (19h00–22h30)", "Aulas regulares"]]
+          },
+          "lab-1": {
+            official: "Laboratório de Informática 01 — Bloco 2º Andar",
+            responsible: "Suporte Local de TI (Rafael) & Coordenação",
+            resources: "22 equipamentos, rack com switches e televisor.",
+            knownError: "Sinal Wi-Fi reduzido no laboratório; prefira os computadores cabeados.",
+            rules: ["Proibido o consumo de alimentos ou bebidas.", "Salve seus projetos na nuvem."],
+            schedule: [["Manhã / Tarde / Noite", "Grade de aulas práticas de TI"]]
+          }
+        };
+
+        if (customOverrides[room.id]) return customOverrides[room.id];
+
+        return {
+          official: `${room.name} — ${room.floorName}`,
+          responsible: "Gestão / Coordenação Fatec Itu",
+          resources: "Infraestrutura padrão do ambiente.",
+          knownError: null,
+          rules: ["Zelar pelo espaço e pelos equipamentos.", "Reportar problemas pelo canal SVC-02."],
+          schedule: [["Funcionamento", "Conforme grade curricular vigente"]]
+        };
+      }
+
+      let myLocationId = "sala-1";
+      let svc01RoomId = "sala-1";
+      let mapSelectedRoomId = "sala-1";
+      let currentFloorKey = "terreo";
+      let searchQuery = "";
+      let lastReceiptText = "";
+      let lastProtocolCode = "";
+
+      const qrStatusBadge = document.getElementById("qrStatusBadge");
+      const headerLocationText = document.getElementById("headerLocationText");
+      const toggleQrSimBtn = document.getElementById("toggleQrSimBtn");
+      const qrSimulatorPanel = document.getElementById("qrSimulatorPanel");
       const qrRoomSelect = document.getElementById("qrRoomSelect");
       const qrSvgContainer = document.getElementById("qrSvgContainer");
       const qrRoomTitle = document.getElementById("qrRoomTitle");
       const qrUrlPreview = document.getElementById("qrUrlPreview");
-      const platesGridContainer = document.getElementById("platesGridContainer");
+      const simulateScanBtn = document.getElementById("simulateScanBtn");
+      const copyQrLinkBtn = document.getElementById("copyQrLinkBtn");
+      const openPlatesModalBtn = document.getElementById("openPlatesModalBtn");
+
+      const heroOpenTicketBtn = document.getElementById("heroOpenTicketBtn");
+      const heroOpenMapBtn = document.getElementById("heroOpenMapBtn");
+      const heroOpenInfoBtn = document.getElementById("heroOpenInfoBtn");
+
+      const navTabs = document.querySelectorAll(".nav-tab");
+      const tabPanels = document.querySelectorAll(".tab-panel");
+
+      const svc01RoomSelect = document.getElementById("svc01RoomSelect");
+      const svc01BackToMyRoomBtn = document.getElementById("svc01BackToMyRoomBtn");
+      const svc01OpenTicketBtn = document.getElementById("svc01OpenTicketBtn");
+      const svc01ViewOnMapBtn = document.getElementById("svc01ViewOnMapBtn");
+      const svc01KnownErrorBanner = document.getElementById("svc01KnownErrorBanner");
+      const s01CatBadge = document.getElementById("s01CatBadge");
+      const s01FloorLabel = document.getElementById("s01FloorLabel");
+      const s01RoomName = document.getElementById("s01RoomName");
+      const s01OfficialTitle = document.getElementById("s01OfficialTitle");
+      const s01Responsible = document.getElementById("s01Responsible");
+      const s01Resources = document.getElementById("s01Resources");
+      const s01Rules = document.getElementById("s01Rules");
+      const s01ScheduleBody = document.getElementById("s01ScheduleBody");
+
+      const svc02Local = document.getElementById("svc02Local");
+      const svc02Impacto = document.getElementById("svc02Impacto");
+      const svc02Urgencia = document.getElementById("svc02Urgencia");
+      const slaText = document.getElementById("slaText");
+      const slaBadge = document.getElementById("slaBadge");
+
+      const campusSvg = document.getElementById("campusSvg");
+      const floorTabsEl = document.getElementById("floorTabs");
+      const planLegendEl = document.getElementById("planLegend");
+      const roomSearchInput = document.getElementById("roomSearchInput");
+      const roomSearchResults = document.getElementById("roomSearchResults");
+      const centerMyLocationBtn = document.getElementById("centerMyLocationBtn");
+
+      const wfCatBadge = document.getElementById("wfCatBadge");
+      const wfFloorLabel = document.getElementById("wfFloorLabel");
+      const wfDestName = document.getElementById("wfDestName");
+      const wfDestSubtitle = document.getElementById("wfDestSubtitle");
+      const wfRouteTitle = document.getElementById("wfRouteTitle");
+      const wfRouteSummary = document.getElementById("wfRouteSummary");
+      const wfRouteSteps = document.getElementById("wfRouteSteps");
+      const wfOriginSummary = document.getElementById("wfOriginSummary");
+      const wfInspectSvc01Btn = document.getElementById("wfInspectSvc01Btn");
+      const wfOpenTicketBtn = document.getElementById("wfOpenTicketBtn");
+      const wfSetAsMyLocationBtn = document.getElementById("wfSetAsMyLocationBtn");
+
+      const svc04Ambiente = document.getElementById("svc04Ambiente");
+
+      const protocolModal = document.getElementById("protocolModal");
+      const modalProtocolCode = document.getElementById("modalProtocolCode");
+      const modalTimestamp = document.getElementById("modalTimestamp");
+      const modalSummaryList = document.getElementById("modalSummaryList");
+      const copyReceiptBtn = document.getElementById("copyReceiptBtn");
+      const downloadReceiptBtn = document.getElementById("downloadReceiptBtn");
+      const closeModalBtn = document.getElementById("closeModalBtn");
+      const csatFeedbackText = document.getElementById("csatFeedbackText");
+
       const platesModal = document.getElementById("platesModal");
+      const platesGridContainer = document.getElementById("platesGridContainer");
+      const closePlatesModalBtn = document.getElementById("closePlatesModalBtn");
+      const toastFeedback = document.getElementById("toastFeedback");
 
-      // Popula Select
-      qrRoomSelect.innerHTML = ROOMS.map(r => `<option value="${r.id}">${r.name}</option>`).join("");
-
-      // Gerador Real de QR Code via QRCode.js
-      function renderRealQrCode(container, targetUrl, size = 110) {
+      // Renderizador de QR Code via QRCode.js
+      function renderRealQrCode(container, textUrl, size) {
+        size = size || 110;
         container.innerHTML = "";
         new QRCode(container, {
-          text: targetUrl,
+          text: textUrl,
           width: size,
           height: size,
           colorDark: "#1C2127",
@@ -234,59 +1436,468 @@
         });
       }
 
-      function updateQrView(roomId) {
-        const room = ROOMS.find(r => r.id === roomId) || ROOMS[0];
+      function populateRoomSelects() {
+        const floorGroupsHtml = FLOORS.map(function (fl) {
+          const roomsInFloor = QR_ELIGIBLE_ROOMS.filter(r => r.floor === fl.key);
+          const options = roomsInFloor.map(r => `<option value="${r.id}">${r.name} (${CAT[r.cat]})</option>`).join("");
+          return `<optgroup label="${fl.name}">${options}</optgroup>`;
+        }).join("");
+
+        qrRoomSelect.innerHTML = floorGroupsHtml;
+        svc01RoomSelect.innerHTML = floorGroupsHtml;
+
+        const svc02GroupsHtml = FLOORS.map(function (fl) {
+          const roomsInFloor = ALL_ROOMS.filter(r => r.floor === fl.key && !r.hideName);
+          const options = roomsInFloor.map(r => {
+            const label = `${r.name} — ${fl.name}`;
+            return `<option value="${label}" data-room-id="${r.id}">${label}</option>`;
+          }).join("");
+          return `<optgroup label="${fl.name}">${options}</optgroup>`;
+        }).join("");
+        svc02Local.innerHTML = svc02GroupsHtml;
+
+        svc04Ambiente.innerHTML =
+          `<option value="">Selecione o laboratório ou sala...</option>` +
+          FLOORS.map(function (fl) {
+            const labsAndRooms = QR_ELIGIBLE_ROOMS.filter(r => r.floor === fl.key && (r.cat === "lab" || r.cat === "aula" || r.cat === "esp"));
+            const options = labsAndRooms.map(r => {
+              const label = `${r.name} (${fl.name})`;
+              return `<option value="${label}" data-room-id="${r.id}">${label}</option>`;
+            }).join("");
+            return `<optgroup label="${fl.name}">${options}</optgroup>`;
+          }).join("") +
+          `<option value="Todos os Laboratórios de TI">Todos os Laboratórios de TI</option>`;
+      }
+
+      function renderSvc01Details(roomId) {
+        const room = ROOM_MAP[roomId] || ROOM_MAP[myLocationId];
+        if (!room) return;
+        svc01RoomId = room.id;
+        if (svc01RoomSelect.querySelector(`option[value="${room.id}"]`)) {
+          svc01RoomSelect.value = room.id;
+        }
+
+        const details = getRoomDetails(room);
+        s01CatBadge.textContent = CAT[room.cat];
+        s01FloorLabel.textContent = room.floorName;
+        s01RoomName.textContent = room.name;
+        s01OfficialTitle.textContent = details.official;
+        s01Responsible.textContent = details.responsible;
+        s01Resources.textContent = details.resources;
+
+        if (details.knownError) {
+          svc01KnownErrorBanner.style.display = "block";
+          svc01KnownErrorBanner.innerHTML = `<strong>⚠️ Aviso Técnico:</strong> ${details.knownError}`;
+        } else {
+          svc01KnownErrorBanner.style.display = "none";
+        }
+
+        s01Rules.innerHTML = details.rules.map(r => `<li>${r}</li>`).join("");
+        s01ScheduleBody.innerHTML = details.schedule.map(row => `<tr><td><strong>${row[0]}</strong></td><td>${row[1]}</td></tr>`).join("");
+      }
+
+      function updateSlaPreview() {
+        const imp = svc02Impacto.value;
+        const urg = svc02Urgencia.value;
+        const matrix = {
+          "Alto|Alta": { code: "P1 — Crítica", desc: "Primeira resposta em 30 min • Restauração em 4h úteis." },
+          "Alto|Média": { code: "P2 — Alta", desc: "Primeira resposta em 1h • Restauração em 1 dia útil." },
+          "Alto|Baixa": { code: "P3 — Média", desc: "Primeira resposta em 4h úteis • Restauração em 3 dias úteis." },
+          "Médio|Alta": { code: "P2 — Alta", desc: "Primeira resposta em 1h • Restauração em 1 dia útil." },
+          "Médio|Média": { code: "P3 — Média", desc: "Primeira resposta em 4h úteis • Restauração em 3 dias úteis." },
+          "Médio|Baixa": { code: "P4 — Baixa", desc: "Primeira resposta em 1 dia útil • Restauração em 5 dias úteis." },
+          "Baixo|Alta": { code: "P3 — Média", desc: "Primeira resposta em 4h úteis • Restauração em 3 dias úteis." },
+          "Baixo|Média": { code: "P4 — Baixa", desc: "Primeira resposta em 1 dia útil • Restauração em 5 dias úteis." },
+          "Baixo|Baixa": { code: "P5 — Planejada", desc: "Primeira resposta em 2 dias úteis • Restauração em 15 dias úteis." }
+        };
+        const res = matrix[`${imp}|${urg}`] || matrix["Médio|Média"];
+        slaBadge.textContent = res.code;
+        slaText.textContent = res.desc;
+        return res;
+      }
+
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      function createSvgEl(tag, attrs, parent) {
+        const el = document.createElementNS(SVG_NS, tag);
+        for (const k in attrs) el.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(el);
+        return el;
+      }
+
+      function wrapText(text, maxChars) {
+        const words = text.split(" ");
+        const lines = [];
+        let cur = "";
+        words.forEach(w => {
+          if ((cur + " " + w).trim().length <= maxChars) {
+            cur = (cur + " " + w).trim();
+          } else {
+            if (cur) lines.push(cur);
+            cur = w;
+          }
+        });
+        if (cur) lines.push(cur);
+        return lines;
+      }
+
+      function renderFloorSvg() {
+        const floorObj = DATA[currentFloorKey];
+        const margin = 10;
+        campusSvg.innerHTML = "";
+        campusSvg.setAttribute("viewBox", `${-margin} ${-margin} ${W + 2 * margin} ${floorObj.H + 2 * margin}`);
+
+        createSvgEl("rect", { x: 0, y: 0, width: W, height: floorObj.H, rx: 6, class: "bld" }, campusSvg);
+
+        const furnGroup = createSvgEl("g", { class: "furn" }, campusSvg);
+        floorObj.furn.forEach(p => {
+          createSvgEl("rect", { x: p[0] - 22, y: p[1] - 9, width: 44, height: 18, rx: 4 }, furnGroup);
+          [-14, 6].forEach(dx => {
+            createSvgEl("rect", { x: p[0] + dx, y: p[1] - 17, width: 10, height: 6, rx: 2, class: "ch" }, furnGroup);
+            createSvgEl("rect", { x: p[0] + dx, y: p[1] + 11, width: 10, height: 6, rx: 2, class: "ch" }, furnGroup);
+          });
+        });
+
+        floorObj.rooms.forEach(r => {
+          const isHere = r.id === myLocationId;
+          const isSelected = r.id === mapSelectedRoomId;
+          let cls = `room k-${r.cat}`;
+          if (isSelected) cls += " sel";
+          if (isHere) cls += " here";
+          if (searchQuery && norm(r.name).indexOf(searchQuery) === -1) cls += " dim";
+
+          const g = createSvgEl("g", { class: cls, "data-id": r.id, tabindex: "0", role: "button" }, campusSvg);
+          createSvgEl("rect", { x: r.x + 1.5, y: r.y + 1.5, width: r.w - 3, height: r.h - 3, rx: 5, class: "r" }, g);
+
+          let tx = r.x + r.w / 2;
+          let tw = r.w;
+          if (r.stairs) {
+            const sx = r.x + r.w * 0.58;
+            for (let x = sx; x < r.x + r.w - 4; x += 9) {
+              createSvgEl("line", { x1: x, y1: r.y + 6, x2: x, y2: r.y + r.h - 6, class: "step" }, g);
+            }
+            tw = r.w * 0.55;
+            tx = r.x + tw / 2 + 2;
+          }
+
+          if (!r.hideName) {
+            const fs = r.fs || (r.w < 120 ? 11.5 : 13.5);
+            const label = r.short || r.name;
+            const lines = wrapText(label, Math.max(4, Math.floor((tw - 10) / (fs * 0.6))));
+            const textYOffset = isHere ? 7 : 0;
+            const t = createSvgEl("text", {
+              x: tx, y: r.y + r.h / 2 + textYOffset - ((lines.length - 1) * fs * 1.15) / 2,
+              "text-anchor": "middle", "dominant-baseline": "central", "font-size": fs
+            }, g);
+            lines.forEach((ln, idx) => {
+              const ts = createSvgEl("tspan", { x: tx, dy: idx === 0 ? 0 : fs * 1.15 }, t);
+              ts.textContent = ln;
+            });
+          }
+
+          if (isHere) {
+            const badgeW = Math.min(r.w - 6, 108);
+            const badgeH = 18;
+            const bx = r.x + (r.w - badgeW) / 2;
+            const by = Math.max(2, r.y - 4);
+            const pinG = createSvgEl("g", { class: "here-pin-group" }, g);
+            createSvgEl("rect", { x: bx, y: by, width: badgeW, height: badgeH, rx: 9, fill: "#78001A", stroke: "#FFFFFF", "stroke-width": "1.5" }, pinG);
+            const pinTxt = createSvgEl("text", { x: bx + badgeW / 2, y: by + badgeH / 2 + 0.5, "text-anchor": "middle", "dominant-baseline": "central", "font-size": "8.5", "font-weight": "800", fill: "#FFFFFF" }, pinG);
+            pinTxt.textContent = "VOCÊ ESTÁ AQUI";
+          }
+        });
+
+        updateFloorTabsUI();
+      }
+
+      function updateFloorTabsUI() {
+        const myRoom = ROOM_MAP[myLocationId];
+        floorTabsEl.querySelectorAll("button").forEach(btn => {
+          const fk = btn.getAttribute("data-floor");
+          btn.setAttribute("aria-selected", fk === currentFloorKey ? "true" : "false");
+          const hasHere = myRoom && myRoom.floor === fk;
+          const dot = btn.querySelector(".floor-here-dot");
+          if (dot) dot.style.display = hasHere ? "inline-block" : "none";
+        });
+      }
+
+      function updateWayfindingPanel() {
+        const target = ROOM_MAP[mapSelectedRoomId] || ROOM_MAP[myLocationId];
+        const origin = ROOM_MAP[myLocationId];
+        if (!target || !origin) return;
+
+        wfCatBadge.textContent = CAT[target.cat];
+        wfFloorLabel.textContent = target.floorName;
+        wfDestName.textContent = target.name;
+        wfDestSubtitle.textContent = `${CAT[target.cat]} • ${target.floorName}`;
+        wfOriginSummary.textContent = `${origin.name} (${origin.floorName})`;
+
+        if (origin.id === target.id) {
+          wfRouteTitle.textContent = "📍 Você está neste ambiente";
+          wfRouteSummary.textContent = "Sua posição atual está marcada no mapa. Toque em qualquer outra sala para traçar a rota.";
+          wfRouteSteps.innerHTML = "";
+          wfSetAsMyLocationBtn.style.display = "none";
+        } else {
+          wfSetAsMyLocationBtn.style.display = "inline-flex";
+          wfRouteTitle.textContent = `🧭 Rota: ${origin.name} → ${target.name}`;
+
+          const steps = [];
+          if (origin.floor === target.floor) {
+            wfRouteSummary.textContent = `Ambos os ambientes ficam no ${target.floorName}.`;
+            steps.push(`Saia de ${origin.name} para o corredor central do ${origin.floorName}.`);
+            steps.push(target.y < origin.y ? `Siga para a ala norte até ${target.name}.` : `Siga para a ala sul até ${target.name}.`);
+          } else {
+            const diff = target.floorRank - origin.floorRank;
+            const action = diff > 0 ? "Suba" : "Desça";
+            steps.push(`Saia de ${origin.name} e dirija-se às Escadas centrais ou ao Elevador no ${origin.floorName}.`);
+            steps.push(`${action} até o ${target.floorName}.`);
+            steps.push(`No corredor do ${target.floorName}, localize ${target.name} destacado em azul.`);
+          }
+          wfRouteSteps.innerHTML = steps.map(st => `<li>${st}</li>`).join("");
+        }
+      }
+
+      function setMyLocation(roomId) {
+        const room = ROOM_MAP[roomId];
+        if (!room) return;
+
+        myLocationId = room.id;
+        svc01RoomId = room.id;
+        mapSelectedRoomId = room.id;
+        currentFloorKey = room.floor;
+
+        headerLocationText.innerHTML = `Você está em: <strong>${room.name}</strong> (${room.floorName} • ${CAT[room.cat]})`;
+
+        if (qrRoomSelect.querySelector(`option[value="${room.id}"]`)) {
+          qrRoomSelect.value = room.id;
+        }
+        updateQrSimulatorCard(room);
+        renderSvc01Details(room.id);
+
+        const fullLabel = `${room.name} — ${room.floorName}`;
+        if (svc02Local.querySelector(`option[value="${fullLabel}"]`)) {
+          svc02Local.value = fullLabel;
+        }
+        const opt04 = svc04Ambiente.querySelector(`option[data-room-id="${room.id}"]`);
+        if (opt04) svc04Ambiente.value = opt04.value;
+
+        renderFloorSvg();
+        updateWayfindingPanel();
+      }
+
+      function updateQrSimulatorCard(room) {
         const fullUrl = `${BASE_URL}?sala=${room.id}`;
-        qrRoomTitle.textContent = `QR Code — ${room.name}`;
+        qrRoomTitle.textContent = `QR Code — ${room.name} (${room.floorName})`;
         qrUrlPreview.textContent = fullUrl;
         renderRealQrCode(qrSvgContainer, fullUrl, 110);
       }
 
-      qrRoomSelect.addEventListener("change", function () {
-        updateQrView(this.value);
+      function selectRoomOnMap(roomId) {
+        const room = ROOM_MAP[roomId];
+        if (!room) return;
+        mapSelectedRoomId = room.id;
+        if (currentFloorKey !== room.floor) currentFloorKey = room.floor;
+        renderFloorSvg();
+        updateWayfindingPanel();
+      }
+
+      function activateMainTab(tabId) {
+        navTabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tabId));
+        tabPanels.forEach(p => p.classList.toggle("active", p.id === tabId));
+      }
+
+      navTabs.forEach(tab => {
+        tab.addEventListener("click", function () {
+          activateMainTab(tab.dataset.tab);
+        });
       });
 
-      document.getElementById("openPlatesModalBtn").addEventListener("click", function () {
+      heroOpenTicketBtn.addEventListener("click", () => activateMainTab("tab-svc02"));
+      heroOpenMapBtn.addEventListener("click", () => { activateMainTab("tab-svc03"); selectRoomOnMap(myLocationId); });
+      heroOpenInfoBtn.addEventListener("click", () => activateMainTab("tab-svc01"));
+
+      svc01RoomSelect.addEventListener("change", function () { renderSvc01Details(this.value); });
+      svc01BackToMyRoomBtn.addEventListener("click", function () { renderSvc01Details(myLocationId); showToast(`Exibindo sua sala: ${ROOM_MAP[myLocationId].name}`); });
+      svc01OpenTicketBtn.addEventListener("click", () => activateMainTab("tab-svc02"));
+      svc01ViewOnMapBtn.addEventListener("click", () => { activateMainTab("tab-svc03"); selectRoomOnMap(svc01RoomId); });
+
+      FLOORS.forEach(fl => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.setAttribute("role", "tab");
+        btn.setAttribute("data-floor", fl.key);
+        btn.innerHTML = `<span class="floor-here-dot" style="display:none;"></span><span>${fl.name}</span>`;
+        btn.addEventListener("click", function () {
+          currentFloorKey = fl.key;
+          renderFloorSvg();
+        });
+        floorTabsEl.appendChild(btn);
+      });
+
+      Object.keys(CAT).forEach(catKey => {
+        const li = document.createElement("li");
+        const i = document.createElement("i");
+        i.style.background = `var(--c-${catKey})`;
+        li.appendChild(i);
+        li.appendChild(document.createTextNode(CAT[catKey]));
+        planLegendEl.appendChild(li);
+      });
+
+      document.querySelectorAll(".shortcut-pill").forEach(btn => {
+        btn.addEventListener("click", function () {
+          const targetId = this.getAttribute("data-goto");
+          if (ROOM_MAP[targetId]) selectRoomOnMap(targetId);
+        });
+      });
+
+      campusSvg.addEventListener("click", function (e) {
+        const g = e.target.closest ? e.target.closest(".room") : null;
+        if (g) selectRoomOnMap(g.getAttribute("data-id"));
+      });
+
+      roomSearchInput.addEventListener("input", function () {
+        searchQuery = norm(this.value.trim());
+        roomSearchResults.innerHTML = "";
+        if (searchQuery) {
+          const matches = ALL_ROOMS.filter(r => !r.hideName && norm(r.name).indexOf(searchQuery) !== -1).slice(0, 10);
+          matches.forEach(r => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "chip";
+            chip.textContent = `${r.name} · ${r.floorName}`;
+            chip.addEventListener("click", () => selectRoomOnMap(r.id));
+            roomSearchResults.appendChild(chip);
+          });
+        }
+        renderFloorSvg();
+      });
+
+      centerMyLocationBtn.addEventListener("click", function () {
+        searchQuery = "";
+        roomSearchInput.value = "";
+        selectRoomOnMap(myLocationId);
+        showToast(`Centralizado em: ${ROOM_MAP[myLocationId].name}`);
+      });
+
+      wfInspectSvc01Btn.addEventListener("click", () => { renderSvc01Details(mapSelectedRoomId); activateMainTab("tab-svc01"); });
+      wfOpenTicketBtn.addEventListener("click", () => activateMainTab("tab-svc02"));
+      wfSetAsMyLocationBtn.addEventListener("click", function () {
+        setMyLocation(mapSelectedRoomId);
+        showToast(`Localização atual: ${ROOM_MAP[mapSelectedRoomId].name}`);
+      });
+
+      toggleQrSimBtn.addEventListener("click", () => qrSimulatorPanel.classList.toggle("hidden"));
+      qrRoomSelect.addEventListener("change", function () {
+        const room = ROOM_MAP[this.value];
+        if (room) updateQrSimulatorCard(room);
+      });
+
+      simulateScanBtn.addEventListener("click", function () {
+        const chosenId = qrRoomSelect.value;
+        qrStatusBadge.textContent = "📍 QR Code Lido";
+        qrSimulatorPanel.classList.add("hidden");
+        setMyLocation(chosenId);
+        activateMainTab("tab-svc01");
+        showToast(`QR Code lido: Você está em ${ROOM_MAP[chosenId].name}`);
+      });
+
+      copyQrLinkBtn.addEventListener("click", function () {
+        const chosenId = qrRoomSelect.value;
+        const fullUrl = `${BASE_URL}?sala=${chosenId}`;
+        copyToClipboard(fullUrl, "Link copiado!");
+      });
+
+      openPlatesModalBtn.addEventListener("click", function () {
         platesGridContainer.innerHTML = "";
-        ROOMS.forEach((r, idx) => {
+        QR_ELIGIBLE_ROOMS.forEach((r, idx) => {
           const fullUrl = `${BASE_URL}?sala=${r.id}`;
           const qrCodeNum = `QR-${String(idx + 1).padStart(3, "0")}`;
           const plateDiv = document.createElement("div");
           plateDiv.className = "qr-plate";
           plateDiv.innerHTML = `
-            <div id="plate-qr-${r.id}" style="flex-shrink:0;"></div>
+            <div id="modal-qr-${r.id}" style="flex-shrink:0;"></div>
             <div class="qr-plate-info">
-              <h4>Fatec Itu — ${r.name}</h4>
-              <p>Aponte a câmara do telemóvel para aceder às informações da sala, reportar um problema ou navegar no campus.</p>
+              <h4>Fatec Itu — ${r.name} (${r.floorName})</h4>
+              <p>Aponte a câmera do celular para ver informações da sala, reportar problemas ou navegar no campus.</p>
               <div class="qr-plate-footer">${qrCodeNum} • ${fullUrl}</div>
             </div>
           `;
           platesGridContainer.appendChild(plateDiv);
-          renderRealQrCode(document.getElementById(`plate-qr-${r.id}`), fullUrl, 90);
+          renderRealQrCode(document.getElementById(`modal-qr-${r.id}`), fullUrl, 90);
         });
         platesModal.classList.add("open");
       });
 
-      document.getElementById("closePlatesModalBtn").addEventListener("click", function () {
-        platesModal.classList.remove("open");
+      closePlatesModalBtn.addEventListener("click", () => platesModal.classList.remove("open"));
+
+      svc02Impacto.addEventListener("change", updateSlaPreview);
+      svc02Urgencia.addEventListener("change", updateSlaPreview);
+
+      function openProtocolModal(serviceName, pairs) {
+        const year = new Date().getFullYear();
+        const digits = Math.floor(1000 + Math.random() * 9000);
+        const protocol = `#FATEC-${year}-${digits}`;
+        const nowStr = new Date().toLocaleString("pt-BR");
+        lastProtocolCode = protocol;
+
+        modalProtocolCode.textContent = protocol;
+        modalTimestamp.textContent = `Emitido em ${nowStr} • ${serviceName}`;
+        modalSummaryList.innerHTML = pairs.map(p => `<div class="summary-row"><div class="summary-key">${p[0]}</div><div class="summary-val">${p[1]}</div></div>`).join("");
+
+        lastReceiptText = `PROTOCOL: ${protocol}\nSERVICE: ${serviceName}\nDATE: ${nowStr}\n` + pairs.map(p => `${p[0]}: ${p[1]}`).join("\n");
+        protocolModal.classList.add("open");
+      }
+
+      document.getElementById("formSvc02").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const local = document.getElementById("svc02Local").value;
+        const cat = document.getElementById("svc02Categoria").value;
+        const desc = document.getElementById("svc02Descricao").value;
+        if (!desc.trim()) { showToast("Preencha a descrição."); return; }
+        const slaInfo = updateSlaPreview();
+        openProtocolModal("SVC-02 — Chamados de TI", [["Local", local], ["Categoria", cat], ["SLA", slaInfo.code], ["Descrição", desc]]);
       });
 
-      // Navegação por abas
-      document.querySelectorAll(".nav-tab").forEach(tab => {
-        tab.addEventListener("click", function () {
-          document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-          document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-          this.classList.add("active");
-          document.getElementById(this.dataset.tab).classList.add("active");
-        });
+      document.getElementById("formSvc04").addEventListener("submit", function (e) {
+        e.preventDefault();
+        openProtocolModal("SVC-04 — Software", [["Docente", document.getElementById("svc04Professor").value], ["Software", document.getElementById("svc04Software").value]]);
       });
 
-      document.getElementById("toggleQrSimBtn").addEventListener("click", function () {
-        document.getElementById("qrSimulatorPanel").classList.toggle("hidden");
+      document.getElementById("formSvc05").addEventListener("submit", function (e) {
+        e.preventDefault();
+        openProtocolModal("SVC-05 — Firewall", [["Docente", document.getElementById("svc05Professor").value], ["Domínios", document.getElementById("svc05Urls").value]]);
       });
 
-      // Inicializa
-      updateQrView("sala-1");
+      closeModalBtn.addEventListener("click", () => protocolModal.classList.remove("open"));
+      copyReceiptBtn.addEventListener("click", () => copyToClipboard(lastReceiptText, "Comprovante copiado!"));
+
+      function copyToClipboard(text, msg) {
+        navigator.clipboard.writeText(text).then(() => showToast(msg));
+      }
+
+      let toastTimer;
+      function showToast(msg) {
+        toastFeedback.textContent = msg;
+        toastFeedback.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastFeedback.classList.remove("show"), 2800);
+      }
+
+      function init() {
+        populateRoomSelects();
+        updateSlaPreview();
+
+        const params = new URLSearchParams(window.location.search);
+        const salaParam = params.get("sala");
+        if (salaParam && ROOM_MAP[salaParam]) {
+          setMyLocation(salaParam);
+          activateMainTab("tab-svc01");
+        } else {
+          setMyLocation("sala-1");
+          activateMainTab("tab-svc03");
+        }
+      }
+
+      init();
     })();
   </script>
 </body>
